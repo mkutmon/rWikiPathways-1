@@ -1,0 +1,88 @@
+---
+title: "Alternative for colored pathways"
+author: "by Martina Summer-Kutmon"
+package: rWikiPathways, RCy3
+date: "`r Sys.Date()`"
+output: 
+  BiocStyle::html_document:
+    toc_float: true
+    includes:
+      in_header: ColoredPathways-schema.html
+#  pdf_document:
+#    toc: true 
+vignette: >
+  %\VignetteIndexEntry{1. Overview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: tutorial.bib
+csl: biomed-central.csl
+references:
+- id: dummy
+  title: no title
+  author:
+  - family: noname
+    given: noname
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*Comment*: Currently only consistently works for **one** node highlighting. There is an issue with applying bypass rules in Cytoscape if nodes have the same name (often the case in pathways). Additionally, getSelectedNodes does not provide the nodes in the same order and therefore the colors might be mixed up. Once setNodeColorBypass allows SUID as paramters, both problems will be solved (issue submitted to RCy3). 
+
+*WikiPathways* is a well-known repository for biological pathways that provides unique tools to the research community for content creation, editing and utilization.
+
+**R** is a powerful programming language and environment for statistical and exploratory data analysis.
+
+**RCy3** with the WikiPathways app in Cytoscape, we can load pathways and create colored pathways as previously possible through the WikiPathways REST API.
+
+# Prerequisites
+
+You need the **RCy3** package:
+
+```{r}
+if(!"RCy3" %in% installed.packages()){
+    if (!requireNamespace("BiocManager", quietly=TRUE))
+        install.packages("BiocManager")
+    BiocManager::install("RCy3")
+}
+library(RCy3)
+```
+
+Check if Cytoscape is open and can be contacted and if the WikiPathways app is installed:
+```{r}
+cytoscapePing()
+installApp('WikiPathways')
+```
+
+# Creating colored pathways based on graphIds
+
+Every element in the pathway has a unique graphId. Using these graphIds, you can specify how the datanodes should be colored. The code below replaces the getColoredPathway() REST webservice call.
+
+```{r}
+graphId = c("e3012")
+color = c("#DD88FF")
+pwId = "WP554"
+
+commandsRun(paste0('wikipathways import-as-pathway id=',pwId))
+selectNodes(graphId,"GraphID")
+setNodeColorBypass(getSelectedNodes(),color)
+clearSelection()
+exportImage(filename=paste(pwId,"-graphid.png"), type="PNG", resolution="600", zoom="500")
+```
+
+# Creating colored pathways based on Ensembl identifiers
+
+Elements in pathways can also have an Xref identifier of different datasources. All gene identifiers get converted to Ensembl when imported into Cytoscape. Using these Ensembl identifiers, you can specify how the datanodes should be colored. The code below replaces the getColoredPathway() REST webservice call.
+
+```{r}
+ensembl = c("ENSG00000182220")
+color = c("#DD8800")
+pwId = "WP554"
+
+commandsRun(paste0('wikipathways import-as-pathway id=',pwId))
+selectNodes(ensembl,"Ensembl")
+setNodeColorBypass(getSelectedNodes(),color)
+clearSelection()
+exportImage(filename=paste(pwId,"-ensembl.png"), type="PNG", resolution="600", zoom="500")
+```
